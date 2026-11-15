@@ -1,0 +1,74 @@
+# ============= Python =============
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+*.whl
+
+# 虚拟环境
+venv/
+.venv/
+env/
+.env
+.env.*
+!.env.example
+
+# 测试
+.pytest_cache/
+.coverage
+htmlcov/
+.coverage.*
+
+# SQLite 数据库文件（开发用，不上传）
+*.db
+*.sqlite3
+
+# ============= Node.js / 前端 =============
+node_modules/
+dist/
+dist-ssr/
+*.local
+.vite/
+.cache/
+.parcel-cache/
+
+# ============= IDE =============
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# AI 代理/调试产物
+.workbuddy/
+_diag.py
+test2.html
+
+# ============= 系统 =============
+.Trashes
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ============= 日志 =============
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ============= AI 生成任务产物 =============
+*.tmp
+*.bak
+
+# ============= 运行时文件 =============
+backend/app/uploads/
+backend/doc/
+backend/test_upload.txt
+
+# ============= 文档缓存（可选） =============
+# docs/_build/
