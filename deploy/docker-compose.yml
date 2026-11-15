@@ -1,0 +1,92 @@
+# ============================================================
+# MemoMind 生产部署 Docker Compose
+# 使用方法：docker compose up -d --build
+# ============================================================
+
+name: memomind
+
+services:
+  # ----- PostgreSQL 数据库 -----
+  postgres:
+    image: postgres:16-alpine
+    container_name: memomind-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-memomind}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme_strong_pwd}
+      POSTGRES_DB: ${POSTGRES_DB:-memomind}
+    volumes:
+      - memomind_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-memomind}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - memomind-net
+
+  # ----- Redis -----
+  redis:
+    image: redis:7-alpine
+    container_name: memomind-redis
+    restart: unless-stopped
+    volumes:
+      - memomind_redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - memomind-net
+
+  # ----- 后端 API -----
+  backend:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.backend
+    container_name: memomind-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      APP_ENV: ${APP_ENV:-prod}
+      APP_HOST: 0.0.0.0
+      APP_PORT: 8000
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost,https://${DOMAIN:-localhost}}
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-memomind}:${POSTGRES_PASSWORD:-changeme_strong_pwd}@postgres:5432/${POSTGRES_DB:-memomind}
+      REDIS_URL: redis://redis:6379/0
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-please-change-me-in-production}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
+      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-chat}
+    volumes:
+      - memomind_uploads:/app/app/uploads
+    networks:
+      - memomind-net
+
+  # ----- 前端 Nginx -----
+  frontend:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.frontend
+    container_name: memomind-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+    networks:
+      - memomind-net
+
+volumes:
+  memomind_pgdata:
+  memomind_redis:
+  memomind_uploads:
+
+networks:
+  memomind-net:
+    driver: bridge

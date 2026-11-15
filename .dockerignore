@@ -1,0 +1,33 @@
+# Backend
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.pyc
+backend/.pytest_cache/
+backend/tests/
+backend/app/uploads/*
+!backend/app/uploads/.gitkeep
+backend/doc/
+backend/test_upload.txt
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Deploy 自身不需要进镜像
+deploy/

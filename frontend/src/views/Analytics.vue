@@ -26,10 +26,10 @@
       </div>
     </div>
 
+    <!-- 第一行：详细趋势 + 保持率变化（等宽） -->
     <el-row :gutter="16">
-      <!-- 左：趋势 + 掌握度 -->
-      <el-col :span="14">
-        <el-card>
+      <el-col :span="12">
+        <el-card class="same-height">
           <template #header>
             <div style="display: flex; justify-content: space-between; align-items: center">
               <span><strong>详细趋势</strong></span>
@@ -44,31 +44,25 @@
         </el-card>
       </el-col>
 
-      <!-- 右：保持率分布 + Rating 分布 -->
-      <el-col :span="10">
-        <el-card style="margin-bottom: 16px">
+      <el-col :span="12">
+        <el-card class="same-height">
           <template #header><strong>保持率变化</strong></template>
-          <v-chart class="chart-sm" :option="retentionOption" autoresize />
-        </el-card>
-
-        <el-card>
-          <template #header><strong>Rating 分布</strong></template>
-          <v-chart class="chart-sm" :option="ratingOption" autoresize />
+          <v-chart class="chart-lg" :option="retentionOption" autoresize />
         </el-card>
       </el-col>
     </el-row>
 
-    <!-- 知识库掌握度 + 薄弱点 -->
+    <!-- 第二行：知识库掌握情况 + Rating 分布（等宽） -->
     <el-row :gutter="16" style="margin-top: 16px">
-      <el-col :span="14">
-        <el-card>
+      <el-col :span="12">
+        <el-card class="same-height">
           <template #header><strong>各知识库掌握情况</strong></template>
           <el-table :data="deckStats" size="small" style="width: 100%">
-            <el-table-column prop="name" label="知识库" min-width="140" />
-            <el-table-column prop="card_count" label="总卡片" width="80" align="center" />
-            <el-table-column prop="learning" label="学习中" width="80" align="center" />
-            <el-table-column prop="review" label="已复习" width="80" align="center" />
-            <el-table-column prop="mastered_pct" label="掌握率" width="180">
+            <el-table-column prop="name" label="知识库" min-width="100" />
+            <el-table-column prop="card_count" label="总卡片" min-width="60" align="center" />
+            <el-table-column prop="learning" label="学习中" min-width="60" align="center" />
+            <el-table-column prop="review" label="已复习" min-width="60" align="center" />
+            <el-table-column prop="mastered_pct" label="掌握率" min-width="120">
               <template #default="{ row }">
                 <el-progress :percentage="row.mastered_pct" :stroke-width="8" />
               </template>
@@ -77,19 +71,10 @@
           <el-empty v-if="deckStats.length === 0" description="还没有知识库" :image-size="60" />
         </el-card>
       </el-col>
-      <el-col :span="10">
-        <el-card>
-          <template #header><strong>薄弱知识点 Top 10</strong></template>
-          <el-table :data="weakPoints" size="small" style="width: 100%">
-            <el-table-column type="index" label="#" width="30" />
-            <el-table-column prop="front_preview" label="内容" show-overflow-tooltip />
-            <el-table-column label="Again" width="60" align="center">
-              <template #default="{ row }">
-                <el-tag size="small" type="danger">{{ row.again_count }}</el-tag>
-              </template>
-            </el-table-column>
-          </el-table>
-          <el-empty v-if="weakPoints.length === 0" description="暂无薄弱点" :image-size="60" />
+      <el-col :span="12">
+        <el-card class="same-height">
+          <template #header><strong>Rating 分布</strong></template>
+          <v-chart class="chart-lg" :option="ratingOption" autoresize />
         </el-card>
       </el-col>
     </el-row>
@@ -118,7 +103,6 @@ const stats = ref<ReviewStatistics | null>(null)
 const retention = ref<RetentionData | null>(null)
 const trend = ref<any>(null)
 const deckStats = ref<any[]>([])
-const weakPoints = ref<any[]>([])
 
 const trendOption = computed(() => {
   if (!trend.value) return { title: { text: '加载中...', left: 'center' } }
@@ -197,18 +181,16 @@ const ratingOption = computed(() => {
 async function loadAll() {
   loading.value = true
   try {
-    const [s, r, t, d, w] = await Promise.all([
+    const [s, r, t, d] = await Promise.all([
       analyticsApi.reviewStats(),
       analyticsApi.retention(),
       analyticsApi.trend({ days: trendDays.value }),
       analyticsApi.decks(),
-      analyticsApi.weakPoints({ limit: 10 }),
     ])
     stats.value = s.data as ReviewStatistics
     retention.value = r.data as RetentionData
     trend.value = t.data as any
     deckStats.value = Array.isArray(d.data) ? d.data as any[] : []
-    weakPoints.value = Array.isArray(w.data) ? w.data as any[] : []
   } finally {
     loading.value = false
   }
@@ -247,4 +229,16 @@ onMounted(loadAll)
 
 .chart-lg { height: 280px; width: 100%; }
 .chart-sm { height: 200px; width: 100%; }
+
+/* 同一行两张卡片等高等宽 */
+:deep(.el-row:has(.same-height)) {
+  display: flex;
+  align-items: stretch;
+}
+:deep(.el-row:has(.same-height) > .el-col) {
+  display: flex;
+}
+.same-height {
+  width: 100%;
+}
 </style>
